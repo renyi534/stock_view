@@ -14,13 +14,16 @@
 #include "RealTimeDoc.h"
 #include "RealTimeFrame.h"
 #include "RealTimeView.h"
-
+#include "Markup.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
 
+char *ppInstrumentID[30];			// 行情订阅列表
+int iInstrumentID = 0;									// 行情订阅数量
+char DB_CONN[128]="DSN=PostgreSQL35W;UID=postgres;PWD=123";
 /////////////////////////////////////////////////////////////////////////////
 // CStockApp
 
@@ -53,7 +56,7 @@ CStockApp theApp;
 BOOL CStockApp::InitInstance()
 {
 	AfxEnableControlContainer();
-
+	LoadConfig();
 #ifdef _AFXDLL
 	Enable3dControls();			// Call this when using MFC in a shared DLL
 #else
@@ -178,4 +181,35 @@ CDocument* CStockApp::CreateDocument(CString strDocTemplateType)
 	   4) 将视图-子框架 窗口 初始化显示
 	  
 	*/	
+}
+
+void CStockApp::LoadConfig()
+{
+	// the read sequence must be the same as config file
+	CFile file;
+	file.Open(".\\config.xml", CFile::modeRead);
+	int len = (int) file.GetLength();
+	char* buf = new char[len+1];
+	file.Read(buf,len);
+	file.Close();
+    CMarkup xml;
+    xml.SetDoc( buf );
+
+    xml.FindChildElem("INSTRUMENT");
+    xml.IntoElem();
+    
+    while ( xml.FindChildElem("ITEM") )
+    {
+        CString item = xml.GetChildData();
+		int len = strlen( (LPCSTR) item );
+		ppInstrumentID[iInstrumentID] = new char[len+1];
+        strcpy(ppInstrumentID[iInstrumentID++], (LPCSTR) item);
+    }
+    xml.OutOfElem();
+
+    xml.FindChildElem("DB_CONN");
+    CString db_conn = xml.GetChildData();
+    strcpy( DB_CONN, (LPCSTR)db_conn);
+
+	delete [] buf;
 }

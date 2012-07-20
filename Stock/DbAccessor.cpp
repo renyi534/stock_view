@@ -16,12 +16,12 @@ static char THIS_FILE[]=__FILE__;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-
+extern char DB_CONN[];
 DbAccessor::DbAccessor():
 	m_db()
 {
 	try{
-		m_db.OpenEx("DSN=PostgreSQL35W;UID=postgres;PWD=123");
+		m_db.OpenEx(DB_CONN);
 	}
 	catch(CDBException* pe)
 	{
@@ -95,6 +95,7 @@ void DbAccessor::execSql(string sql)
 }
 void DbAccessor::getData(string sql, vector<CThostFtdcDepthMarketDataField>& result)
 {
+	result.clear();
 	try{
 		CRecordset rsCustSet(&this->m_db);
 		rsCustSet.Open(CRecordset::snapshot, sql.c_str());
@@ -208,6 +209,7 @@ void DbAccessor::getData(string instrument_ID, string day_s, string time_s,
 
 void DbAccessor::getData(string sql, vector<OrderInfo>& result)
 {
+	result.clear();
 	try{
 		CRecordset rsCustSet(&this->m_db);
 		rsCustSet.Open(CRecordset::snapshot, sql.c_str());
@@ -265,7 +267,7 @@ void DbAccessor::getOrderInfoFromRecord(CRecordset& rs,OrderInfo& data)
 }
 
 void DbAccessor::getData(string instrument_ID, string day_s, string time_s,
-		string day_e, string time_e, vector<COneMinuteData>& result)
+		string day_e, string time_e, vector<CMinuteData>& result)
 {
 	string sql="select * from stock_data.\"OneMinuteData\" where "
 		"(day||' '||\"time\")::timestamp >='";
@@ -276,8 +278,21 @@ void DbAccessor::getData(string instrument_ID, string day_s, string time_s,
 	getData(sql, result);
 }
 
-void DbAccessor::getData(string sql, vector<COneMinuteData>& result)
+void DbAccessor::getData(string instrument_ID, int limitNum, vector<CMinuteData>& result)
 {
+	char numstr[20];
+	sprintf(numstr, "%d", limitNum);
+	string sql="select * from stock_data.\"OneMinuteData\" where instrument_id='"+instrument_ID+
+		"' order by (day||' '||\"time\")::timestamp desc limit "+numstr;
+
+	sql ="select * from ("+sql+") s order by (day||' '||\"time\")::timestamp";
+   
+	getData(sql, result);
+}
+
+void DbAccessor::getData(string sql, vector<CMinuteData>& result)
+{
+	result.clear();
 	try{
 		CRecordset rsCustSet(&this->m_db);
 		rsCustSet.Open(CRecordset::snapshot, sql.c_str());
@@ -294,7 +309,7 @@ void DbAccessor::getData(string sql, vector<COneMinuteData>& result)
 		// the last record, so no record is current
 		while ( !rsCustSet.IsEOF( ) )
 		{
-			COneMinuteData data;
+			CMinuteData data;
 			getOneMinuteDataFromRecord(rsCustSet,data);
 			result.push_back(data);
 			rsCustSet.MoveNext( );
@@ -310,7 +325,92 @@ void DbAccessor::getData(string sql, vector<COneMinuteData>& result)
 	
 }
 
-void DbAccessor::getOneMinuteDataFromRecord(CRecordset& rs,COneMinuteData& data)
+void DbAccessor::getOneMinuteDataFromRecord(CRecordset& rs,CMinuteData& data)
+{
+	// Loop through the recordset,
+	// using GetFieldValue and
+	// GetODBCFieldCount to retrieve
+	// data in all columns
+	short nFields = rs.GetODBCFieldCount();
+	CString* strValue=new CString[nFields];
+
+	for( short index = 0; index < nFields; index++ )
+	{
+		rs.GetFieldValue(index, strValue[index] );
+	}
+	data.m_Day = (LPCTSTR)strValue[0];
+	data.m_Time = (LPCTSTR)strValue[1];
+	data.m_OpenPrice = atof(strValue[2]);
+	data.m_ClosePrice = atof(strValue[3]);
+	data.m_HighPrice = atof(strValue[4]);
+	data.m_LowPrice = atof(strValue[5]);
+	data.m_Volume = atof(strValue[6]);
+	data.m_OpenInterest = atof(strValue[7]);
+	data.m_InstrumentID = (LPCTSTR)strValue[8];
+
+	delete[] strValue;
+}
+
+void DbAccessor::getData(string instrument_ID, string day_s, string time_s,
+		string day_e, string time_e, vector<CHalfMinuteData>& result)
+{
+	string sql="select * from stock_data.\"HalfMinuteData\" where "
+		"(day||' '||\"time\")::timestamp >='";
+	sql+=day_s+" "+time_s+"'::timestamp and (day||' '||\"time\")::timestamp<='";
+	sql+=day_e+" "+time_e+"'::timestamp and instrument_id='"+instrument_ID+
+		"' order by (day||' '||\"time\")::timestamp";
+   
+	getData(sql, result);
+}
+
+void DbAccessor::getData(string instrument_ID, int limitNum, vector<CHalfMinuteData>& result)
+{
+	char numstr[20];
+	sprintf(numstr, "%d", limitNum);
+	string sql="select * from stock_data.\"HalfMinuteData\" where instrument_id='"+instrument_ID+
+		"' order by (day||' '||\"time\")::timestamp desc limit "+numstr;
+
+	sql ="select * from ("+sql+") s order by (day||' '||\"time\")::timestamp asc";
+   
+	getData(sql, result);
+}
+
+void DbAccessor::getData(string sql, vector<CHalfMinuteData>& result)
+{
+	result.clear();
+	try{
+		CRecordset rsCustSet(&this->m_db);
+		rsCustSet.Open(CRecordset::snapshot, sql.c_str());
+
+
+		if( rsCustSet.IsBOF( ) )
+		{
+			// The recordset is empty
+			return;
+		}
+		rsCustSet.MoveFirst();
+
+		// Scroll to the end of the recordset, past
+		// the last record, so no record is current
+		while ( !rsCustSet.IsEOF( ) )
+		{
+			CHalfMinuteData data;
+			getHalfMinuteDataFromRecord(rsCustSet,data);
+			result.push_back(data);
+			rsCustSet.MoveNext( );
+		}
+		rsCustSet.Close();
+	}
+	catch(CDBException* pe)
+	{
+		// The error code is in pe->m_nRetCode
+		pe->ReportError();
+		pe->Delete();
+	}
+	
+}
+
+void DbAccessor::getHalfMinuteDataFromRecord(CRecordset& rs,CHalfMinuteData& data)
 {
 	// Loop through the recordset,
 	// using GetFieldValue and

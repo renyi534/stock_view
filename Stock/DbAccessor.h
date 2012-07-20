@@ -11,7 +11,8 @@ using namespace std;
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-class COneMinuteData;
+class CMinuteData;
+class CHalfMinuteData;
 struct OrderInfo;
 class DbAccessor  
 {
@@ -28,14 +29,20 @@ public:
 	void execSql(string sql);
 	void getData(string sql, vector<OrderInfo>& result);
 	void getData(string instrument_ID, string day_s, string time_s,
-		string day_e, string time_e, vector<COneMinuteData>& result);
-	void getData(string sql, vector<COneMinuteData>& result);
+		string day_e, string time_e, vector<CMinuteData>& result);
+	void getData(string instrument_ID, int limitNum, vector<CMinuteData>& result);
+	void getData(string sql, vector<CMinuteData>& result);
+	void getData(string instrument_ID, string day_s, string time_s,
+		string day_e, string time_e, vector<CHalfMinuteData>& result);
+	void getData(string instrument_ID, int limitNum, vector<CHalfMinuteData>& result);
+	void getData(string sql, vector<CHalfMinuteData>& result);
 	DbAccessor();
 private:
 	void getMarketDataFromRecord(CRecordset& record,CThostFtdcDepthMarketDataField& data);
 	void getOrderInfoFromRecord(CRecordset& rs,OrderInfo& data);
 
-	void getOneMinuteDataFromRecord(CRecordset& rs,COneMinuteData& data);
+	void getOneMinuteDataFromRecord(CRecordset& rs,CMinuteData& data);
+	void getHalfMinuteDataFromRecord(CRecordset& rs,CHalfMinuteData& data);
 	CDatabase m_db;
 };
 

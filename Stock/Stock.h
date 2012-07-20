@@ -22,6 +22,7 @@
 class CStockApp : public CWinApp
 {
 public:
+	void LoadConfig();
 	CDocument* CreateDocument(CString strDocTemplateType);
 	CStockApp();
 

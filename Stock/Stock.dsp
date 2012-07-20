@@ -122,6 +122,10 @@ SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Markup.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\OneMinuteData.cpp
 # End Source File
 # Begin Source File
@@ -203,6 +207,10 @@ SOURCE=.\MainFrm.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Markup.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\OneMinuteData.h
 # End Source File
 # Begin Source File
@@ -274,6 +282,10 @@ SOURCE=.\res\Stock.rc2
 SOURCE=.\res\StockDoc.ico
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\config.xml
+# End Source File
 # Begin Source File
 
 SOURCE=.\ReadMe.txt

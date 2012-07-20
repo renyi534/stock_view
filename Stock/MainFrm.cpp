@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "stock.h"
+#include "stdlib.h"
 
 #include "MainFrm.h"
 #ifdef _DEBUG
@@ -13,6 +14,9 @@ static char THIS_FILE[] = __FILE__;
 
 #include "SelectionDlg.h"
 extern CStockApp theApp;
+
+extern char *ppInstrumentID[30];			// 行情订阅列表
+extern int iInstrumentID;									// 行情订阅数量
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame
 
@@ -90,8 +94,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//设置ListCtrl	
 	m_pListCtrl->SetExtendedStyle(1 | 32);
 	m_pListCtrl->InsertColumn(0,"代码",LVCFMT_CENTER,65);
-	m_pListCtrl->InsertColumn(1,"股票",LVCFMT_CENTER,65);
-
+	m_pListCtrl->InsertColumn(1,"序号",LVCFMT_CENTER,65);
 	//设置EditNo	
 	m_pEditNo->SetLimitText(6);
 
@@ -103,20 +106,22 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//股票代码数组
 	char szStockCode[][7] = 
 	{
-		"IF1204", "IF1205", "IF1206", "IF1207"
+		"IF1204", "IF1205", "IF1206", "IF1207", "IF1208"
 	};
 
 	//股票名称数组
 	char szStockName[][9] = 
 	{
-		"4月合约", "5月合约","6月合约", "7月合约"
+		"4月合约", "5月合约","6月合约", "7月合约", "8月合约"
 	};
 
-	for(int nI = 0;nI < 4;nI++)
+	for(int nI = 0;nI < iInstrumentID;nI++)
 	{
+		char tmp_buf[5];
+		sprintf(tmp_buf, " %d", nI);
 		m_pListCtrl->InsertItem(nI, "New");
-		m_pListCtrl->SetItemText(nI, 0,szStockCode[nI]);
-		m_pListCtrl->SetItemText(nI, 1,szStockName[nI]);
+		m_pListCtrl->SetItemText(nI, 0,ppInstrumentID[nI]);
+		m_pListCtrl->SetItemText(nI, 1, tmp_buf);
 	}	
 	
 	return 0;
@@ -143,7 +148,7 @@ void CMainFrame::OnUpdateEditno()
 {
 	// TODO: Add your control notification handler code here
 	//获得控件指针
-	GetControlls();
+/*	GetControlls();
 
 	CString strNo;
 	CString strName;
@@ -158,7 +163,7 @@ void CMainFrame::OnUpdateEditno()
 
 	//收索ListCtrl控件中匹配项
 	LVFINDINFO info;
-	info.flags = LVFI_PARTIAL | LVFI_STRING;
+	info.flags = LVFI_PARTIAL; //| LVFI_STRING;
 	info.psz = strNo;
 	m_nIndex = m_pListCtrl->FindItem(&info,-1);
 	if(m_nIndex != -1)
@@ -168,7 +173,7 @@ void CMainFrame::OnUpdateEditno()
 		//更新EditName控件内容		
 		strName = m_pListCtrl->GetItemText(m_nIndex,1);
 		m_pEditName->SetWindowText(strName);
-	}	
+	}	*/
 }
 
 void CMainFrame::OnButtonhistory() 

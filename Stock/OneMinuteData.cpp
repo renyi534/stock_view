@@ -16,12 +16,12 @@ static char THIS_FILE[]=__FILE__;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-COneMinuteData::COneMinuteData()
+CMinuteData::CMinuteData()
 {
 
 }
 
-COneMinuteData::~COneMinuteData()
+CMinuteData::~CMinuteData()
 {
 
 }
